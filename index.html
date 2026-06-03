@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AG Investa - Калькулятор розміру позиції</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            /* Фірмова преміум палітра AG Investa */
+            --bg-main: #0D0D0D;             /* Вугільно-Чорний (CMYK 0/0/0/92) */
+            --bg-card: #141414;             /* Вугільно-Чорний */
+            --bg-input: #1C1C1C;            /* Світло-Чорний для полів */
+            --border-color: #2E2E2E;        /* Темно-Сірий (CMYK 0/0/0/71) */
+            --border-focus: #FB6524;        /* Насичений Помаранчевий (CMYK 0/61/90/2) */
+            
+            --color-orange: #FB6524;        /* Насичений Помаранчевий */
+            --color-terracotta: #BF5022;    /* Теракотовий (CMYK 0/58/82/25) */
+            --color-deep-brown: #4A2616;    /* Темно-Коричневий (CMYK 0/49/70/71) */
+            --color-dark-grey: #4A4A4A;     /* Темно-Сірий */
+            --color-white: #FFFFFF;         /* Чистий Білий */
+            
+            --color-text-primary: #FFFFFF;
+            --color-text-secondary: #A3A3A3;
+            
+            --color-green: #10B981;
+            --color-red: #EF4444;
+            --color-blue: #3B82F6;
+            
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--color-text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        /* Головний контейнер */
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 
+                        0 0 50px rgba(251, 101, 36, 0.05);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Ліва сторона: Введення */
+        .calculator-inputs {
+            padding: 40px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 900px) {
+            .calculator-inputs {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 24px;
+            }
+        }
+
+        /* Шапка */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-svg-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--color-deep-brown);
+            background: #0D0D0D;
+        }
+
+        .brand-name {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, var(--color-white) 0%, var(--color-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tool-title {
+            font-size: 0.72rem;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--color-orange);
+            padding-bottom: 2px;
+        }
+
+        /* Сектори ринку (Таби) */
+        .sectors-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .sectors-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .sector-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-secondary);
+            padding: 10px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 700;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+        }
+
+        .sector-btn:hover {
+            border-color: var(--color-orange);
+            color: var(--color-white);
+        }
+
+        .sector-btn.active {
+            background: rgba(251, 101, 36, 0.1);
+            border-color: var(--color-orange);
+            color: var(--color-orange);
+            box-shadow: inset 0 0 10px rgba(251, 101, 36, 0.05);
+        }
+
+        /* Вибір інструменту */
+        .instrument-selector-group {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .instrument-select {
+            width: 100%;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            color: var(--color-white);
+            font-size: 0.95rem;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .instrument-select:focus {
+            border-color: var(--color-orange);
+        }
+
+        /* Поля форми вводу */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 550px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--color-white);
+            font-size: 1rem;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(251, 101, 36, 0.15);
+        }
+
+        .input-prefix {
+            position: absolute;
+            right: 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--color-dark-grey);
+            pointer-events: none;
+        }
+
+        /* Швидкий вибір % ризику */
+        .risk-presets {
+            display: flex;
+            gap: 5px;
+            margin-top: 6px;
+        }
+
+        .preset-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            color: var(--color-text-secondary);
+            padding: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--color-orange);
+            color: var(--color-orange);
+            background: rgba(251, 101, 36, 0.05);
+        }
+
+        /* Права сторона: Результати */
+        .calculator-results {
+            background: linear-gradient(135deg, rgba(74, 38, 22, 0.08) 0%, rgba(20, 20, 20, 0.2) 100%);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-top-right-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .calculator-results {
+                padding: 24px;
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 24px;
+                border-bottom-left-radius: 24px;
+            }
+        }
+
+        .results-header {
+            margin-bottom: 25px;
+        }
+
+        .results-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-white);
+        }
+
+        .results-subtitle {
+            font-size: 0.8rem;
+            color: var(--color-text-secondary);
+        }
+
+        /* Напрямок угоди бейдж */
+        .direction-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .dir-buy {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--color-green);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .dir-sell {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--color-red);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .dir-unknown {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Велике табло з результатом лотів */
+        .primary-metric-card {
+            background: linear-gradient(135deg, #18181C 0%, #111114 100%);
+            border: 1px solid rgba(251, 101, 36, 0.25);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(251, 101, 36, 0.05);
+        }
+
+        .primary-metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--color-orange);
+        }
+
+        .metric-label-big {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--color-text-secondary);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .metric-val-big {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--color-orange);
+            line-height: 1.1;
+        }
+
+        .metric-val-sub {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-top: 6px;
+        }
+
+        /* Списки результатів */
+        .metrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .metric-lbl {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metric-v {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--color-white);
+        }
+
+        .metric-v.highlight {
+            color: var(--color-orange);
+        }
+
+        /* Обгортка дій та брендингу */
+        .results-actions-wrap {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Центрування елементів по горизонталі всередині обгортки */
+            gap: 16px;
+            padding-top: 20px;
+            width: 100%;
+        }
+
+        /* Оновлена велика помаранчева кнопка */
+        .btn-action {
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-orange) 0%, #D84D15 100%);
+            color: var(--color-white);
+            border: none;
+            border-radius: 16px;
+            padding: 18px 24px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 24px rgba(251, 101, 36, 0.35);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(251, 101, 36, 0.55);
+            background: linear-gradient(135deg, #FF7B40 0%, var(--color-orange) 100%);
+        }
+
+        .btn-action:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(251, 101, 36, 0.35);
+        }
+
+        /* Ідеально відцентрований брендований напис */
+        .footer-branding {
+            text-align: center;
+            width: 100%;
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 8px; /* Гармонійний додатковий відступ під кнопкою */
+        }
+
+        /* Спливаюче сповіщення (Toast) */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translate(-50%, 100px);
+            background: #141414;
+            border: 1px solid var(--color-orange);
+            color: var(--color-white);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- LEFT PANEL: INPUTS -->
+    <div class="calculator-inputs">
+        <div class="brand-header">
+            <div class="logo-group">
+                <div class="logo-svg-wrap">
+                    <!-- Повністю очищений оригінальний SVG логотип AG Investa -->
+                    <svg id="Слой_1" data-name="Слой 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
+                        <rect fill="#0d0d0d" width="100" height="100"/>
+                        <path fill="#ffffff" d="M46.15,70.24c-.06-.18-.17-.34-.15-.48.16-1-.51-1.42-1.17-1.89s-1.33-1-2-1.48a1,1,0,0,1-.49-1.08,6.77,6.77,0,0,0-.18-1.74c-.08-.31-.43-.56-.69-.87.38-.51.82-1.15,1.32-1.74a2.41,2.41,0,0,0,.44-2.35c-.16-.6-.25-1.23-.46-1.83,0,.83,0,1.67,0,2.49a3.3,3.3,0,0,1-.39,1.34,9.75,9.75,0,0,1-6,4.73,2.17,2.17,0,0,0-1.36,1,2.7,2.7,0,0,1-.27.39c-.75.92-1.28,1.87-.75,3.1a1.93,1.93,0,0,1,0,.54H30.34a8.5,8.5,0,0,0,.42-.94,8.35,8.35,0,0,0,.17-1,1,1,0,0,1,.14-.43,8.37,8.37,0,0,0,1.79-4.28,1,1,0,0,1,.45-.68,3.11,3.11,0,0,0,2-2.78,13.81,13.81,0,0,1,2.53-6,3.71,3.71,0,0,1,1.54-1.15c1.5-.7,3.06-1.25,4.56-2a9,9,0,0,0,1.76-1.28c.42-.34.79-.7,1.38-.17-.3-.61.07-.86.42-1.21a42.09,42.09,0,0,0,3.05-3.22,5.76,5.76,0,0,1,2.89-1.93A5.7,5.7,0,0,0,55,42.53c.52-.35,1-.79,1.35-1.08a10.07,10.07,0,0,0,2.61,1c.51,0,1.08-.61,1.59-1-2.21.69-2.53.64-4.14-.66.4-.16.76-.31,1.13-.44s.74-.22,1.2-.35a12.55,12.55,0,0,1-1.64-.76,1.36,1.36,0,0,1-.54-.84,2.39,2.39,0,0,1,1.12-2.62,19,19,0,0,1,4.71-2.35c-.66.68-1.21,1.23-1.74,1.79a16,16,0,0,0-1.42,1.56c-.42.57-.28.86.4,1.09a3.3,3.3,0,0,0,.72.22c.57.07,1,.27,1,1l.19-.1-.26-1.23c.7-.44,1.55-.08,2.37-.11a8.48,8.48,0,0,1,3.88,1.14,12.74,12.74,0,0,0,2.64.86,1.55,1.55,0,0,1,1.07,2.36,2.45,2.45,0,0,0-2.68.54,3.46,3.46,0,0,1,2.6-.08A2.53,2.53,0,0,1,69.6,44a6.5,6.5,0,0,0-2.1,1.68,9.3,9.3,0,0,0-2.8,5c-.14,1.13-.1,2.28-.24,3.41a3.21,3.21,0,0,1-.56,1.62q-1.93,2.4-4,4.65a8.83,8.83,0,0,1-1.63,1.11c-.87-1.8-.12-3.38.14-5,.14-.87.35-1.74.49-2.61a1.46,1.46,0,0,0-.09-.83C57.91,51.39,57,49.68,56,48c.52,1.29,1,2.61,1.57,3.88A4.55,4.55,0,0,1,58,55c-.32,1.27-.48,2.59-.73,4l-1.83-1.57-.08,0a4.37,4.37,0,0,0,.37.48,8.8,8.8,0,0,1,2.23,4.73,18,18,0,0,0,.49,2,9.34,9.34,0,0,0,2,3.44,17.79,17.79,0,0,1,1.42,2.09c-.68.2-.68.2-1.56-.8,0,.19,0,.33,0,.47a4.24,4.24,0,0,0,.1.49c-.87,0-1.71,0-2.54,0a.84.84,0,0,1-.48-.68c0-.61.23-1.19-.54-1.54-.18-.08-.24-.56-.25-.86a2.6,2.6,0,0,0-1-2.07c-1.48-1.09-2.41-2.65-3.61-4a25.17,25.17,0,0,0-1.63-1.93,2.58,2.58,0,0,1-.67-2.49,17.52,17.52,0,0,0,.12-2.81c-.32,1.37-.66,2.74-.94,4.12a1.12,1.12,0,0,0,.29.82c1,1.12,2.06,2.2,3.21,3.42l-8.46-.52,0,.2,3.59.55a7.16,7.16,0,0,1-1.62,3.14c1.24,1.56,3,2.61,4,4.45ZM67.47,44.36l0-.12c-.21.06-.42.11-.63.18-1,.38-2,.77-3.05,1.13a1.14,1.14,0,0,1-.7.06C62,45.27,61,45,60.78,43.7c0,0-.06,0-.08,0a1.6,1.6,0,0,0,1.14,2c.39.15.75.41,1.14.59a.84.84,0,0,0,.55.08C64.85,45.69,66.16,45,67.47,44.36ZM63,39.94a1.31,1.31,0,0,0,1.85,0C64.24,39.76,63.62,39.26,63,39.94Zm6.41.7c0-.55-.39-.51-.73-.48-.08,0-.14.13-.21.2.25.11.49.23.74.32C69.28,40.7,69.36,40.65,69.42,40.64Z"/>
+                        <path fill="#ffffff" d="M60.43,60.64l3-3.38c.39,1.37.82,2.67,1.11,4a1.86,1.86,0,0,1-.35,1.26c-.67,1-1.48,1.91-2.12,2.92-.52.83-1.36.88-2.13,1.15a.29.29,0,0,1-.25,0,12.6,12.6,0,0,1-.65-2,.64.64,0,0,1,.75-.6,1.38,1.38,0,0,0,.88-.5c.92-.94.93-1.26.13-2.25Z"/>
+                        <path fill="#ffffff" d="M37.64,53.52c-.31.56-.56,1-.85,1.5a.67.67,0,0,1-.44.22,7.48,7.48,0,0,1-.82,0,1.47,1.47,0,0,0-1.59,1.13c-.21.81-.38,1.63-.51,2.45a3.55,3.55,0,0,1-1.94,2.65,1.12,1.12,0,0,0-.48.43,3.25,3.25,0,0,1-2.48,2.17c.24-.7.48-1.41.74-2.11a1.15,1.15,0,0,1,1.09-.88A2.28,2.28,0,0,0,32.69,59c.13-1,.16-1.91.28-2.85a2.48,2.48,0,0,1,2.15-2.37,4,4,0,0,1,.48-.07Z"/>
+                        <path fill="#ffffff" d="M69.6,34.4c1.23,1.39,1.29,3.12,0,4.23a1,1,0,0,1-.82.17c-.65-.23-1.27-.57-2-.93,1-.13,2.06-.11,2.44-1A9.57,9.57,0,0,0,69.6,34.4Z"/>
+                        <polygon fill="#fb6524" points="66.35 29.53 65.52 32.27 62.76 33.02 65.5 33.84 66.25 36.6 67.08 33.86 69.84 33.11 67.1 32.29 66.35 29.53"/>
+                    </svg>
+                </div>
+                <div class="brand-name">AG Investa</div>
+            </div>
+            <div class="tool-title" id="dynamicTitle">Калькулятор розміру позиції</div>
+        </div>
+
+        <!-- Крок 1: Оберіть сектор ринку -->
+        <div style="margin-bottom: 12px;"><label>1. Оберіть сектор ринку</label></div>
+        <div class="sectors-grid">
+            <button class="sector-btn active" onclick="switchSector('forex', this)">
+                <i data-lucide="globe" size="18"></i>Валюти
+            </button>
+            <button class="sector-btn" onclick="switchSector('stocks', this)">
+                <i data-lucide="line-chart" size="18"></i>Акції
+            </button>
+            <button class="sector-btn" onclick="switchSector('indices', this)">
+                <i data-lucide="landmark" size="18"></i>Індекси
+            </button>
+            <button class="sector-btn" onclick="switchSector('crypto', this)">
+                <i data-lucide="coins" size="18"></i>Крипто
+            </button>
+            <button class="sector-btn" onclick="switchSector('metals', this)">
+                <i data-lucide="gem" size="18"></i>Метали
+            </button>
+            <button class="sector-btn" onclick="switchSector('oilgas', this)">
+                <i data-lucide="flame" size="18"></i>Нафта/Газ
+            </button>
+            <button class="sector-btn" onclick="switchSector('others', this)">
+                <i data-lucide="plus-circle" size="18"></i>Інші
+            </button>
+        </div>
+
+        <!-- Крок 2: Оберіть торговий інструмент -->
+        <div class="instrument-selector-group">
+            <label for="instrumentSelect">2. Оберіть торговий інструмент</label>
+            <select id="instrumentSelect" class="instrument-select" onchange="onInstrumentChange()">
+            </select>
+        </div>
+
+        <!-- Крок 3: Параметри угоди -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="balance">Баланс рахунку</label>
+                <div class="input-wrapper">
+                    <input type="number" id="balance" value="10000" oninput="calculate()">
+                    <span class="input-prefix">USD</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="riskPct">Ризик на угоду</label>
+                <div class="input-wrapper">
+                    <input type="number" id="riskPct" value="1" step="0.1" oninput="calculate()">
+                    <span class="input-prefix">%</span>
+                </div>
+                <div class="risk-presets">
+                    <button class="preset-btn" onclick="applyRiskPreset(0.5)">0.5%</button>
+                    <button class="preset-btn" onclick="applyRiskPreset(1)">1.0%</button>
+                    <button class="preset-btn" onclick="applyRiskPreset(1.5)">1.5%</button>
+                    <button class="preset-btn" onclick="applyRiskPreset(2)">2.0%</button>
+                    <button class="preset-btn" onclick="applyRiskPreset(3)">3.0%</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 0;">
+            <div class="form-group">
+                <label for="entryPrice">Ціна входу</label>
+                <div class="input-wrapper">
+                    <input type="number" id="entryPrice" value="1.0850" step="any" oninput="calculate()">
+                    <span class="input-prefix">USD</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="stopLoss">Ціна Stop Loss</label>
+                <div class="input-wrapper">
+                    <input type="number" id="stopLoss" value="1.0800" step="any" oninput="calculate()">
+                    <span class="input-prefix">USD</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: RESULTS -->
+    <div class="calculator-results">
+        <div>
+            <div class="results-header">
+                <h3 class="results-title">
+                    <i data-lucide="calculator" size="20" style="color: var(--color-orange);"></i> 
+                    Результат розрахунку
+                </h3>
+                <div class="results-subtitle">Розраховані параметри вашого торгового ордера</div>
+            </div>
+
+            <!-- Бейдж напрямку -->
+            <div>
+                <span id="directionBadge" class="direction-indicator dir-unknown">
+                    <i data-lucide="help-circle" size="14"></i> Напрямок: Очікування
+                </span>
+            </div>
+
+            <!-- Велике табло з результатом лотів -->
+            <div class="primary-metric-card">
+                <div class="metric-label-big">Розмір позиції (MT4 / MT5)</div>
+                <div class="metric-val-big" id="outLots">0.00 Lots</div>
+                <div class="metric-val-sub" id="outUnits">0 одиниць активу</div>
+            </div>
+
+            <!-- Детальні результати -->
+            <div class="metrics-list">
+                <div class="metric-row">
+                    <span class="metric-lbl">
+                        <i data-lucide="dollar-sign" size="14"></i> Сума ризику
+                    </span>
+                    <span class="metric-v" id="outRiskAmount">$0.00</span>
+                </div>
+                <div class="metric-row" style="border-bottom: none;">
+                    <span class="metric-lbl">
+                        <i data-lucide="expand" size="14"></i> Відстань до стоп-лосу
+                    </span>
+                    <span class="metric-v highlight" id="outSlDistance">0 pips (0.00%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Контейнер дій та брендингу -->
+        <div class="results-actions-wrap">
+            <button class="btn-action" onclick="copyTradeSetup()">
+                <i data-lucide="copy" size="18"></i> Скопіювати сетап
+            </button>
+            <div class="footer-branding">AG INVESTA • CAPITAL PROTECTION</div>
+        </div>
+    </div>
+</div>
+
+<!-- Спливаюче сповіщення -->
+<div class="toast" id="toast">
+    <i data-lucide="check-circle-2" size="18" style="color: var(--color-orange);"></i>
+    <span>Дані лоту успішно скопійовано!</span>
+</div>
+
+<script>
+    // Оновлена та розширена база даних торгових інструментів за секторами ринку
+    const instrumentsDb = {
+        forex: [
+            { name: "EUR/USD (Євро / Долар США)", ticker: "EURUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.0850, defaultSL: 1.0800 },
+            { name: "GBP/USD (Фунт Стерлінгів / Долар США)", ticker: "GBPUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.2650, defaultSL: 1.2600 },
+            { name: "USD/JPY (Долар США / Японська Єна)", ticker: "USDJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 156.50, defaultSL: 156.00 },
+            { name: "AUD/USD (Австралійський долар / Долар США)", ticker: "AUDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6650, defaultSL: 0.6610 },
+            { name: "USD/CAD (Долар США / Канадський Долар)", ticker: "USDCAD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.3650, defaultSL: 1.3700 },
+            { name: "USD/CHF (Долар США / Швейцарський франк)", ticker: "USDCHF", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.9050, defaultSL: 0.9100 },
+            { name: "NZD/USD (Новозеландський долар / Долар США)", ticker: "NZDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6120, defaultSL: 0.6080 },
+            { name: "GBP/JPY (Фунт Стерлінгів / Єна)", ticker: "GBPJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 198.50, defaultSL: 197.50 },
+            { name: "EUR/JPY (Євро / Єна)", ticker: "EURJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 169.50, defaultSL: 168.50 },
+            { name: "EUR/AUD (Євро / Австралійський долар)", ticker: "EURAUD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.6320, defaultSL: 1.6250 }
+        ],
+        stocks: [
+            { name: "Apple Inc. (AAPL)", ticker: "AAPL", contractSize: 100, pipSize: 0.01, defaultEntry: 190.00, defaultSL: 185.00 },
+            { name: "Tesla Inc. (TSLA)", ticker: "TSLA", contractSize: 100, pipSize: 0.01, defaultEntry: 175.00, defaultSL: 170.00 },
+            { name: "NVIDIA Corp. (NVDA)", ticker: "NVDA", contractSize: 100, pipSize: 0.01, defaultEntry: 950.00, defaultSL: 920.00 },
+            { name: "Microsoft Corp. (MSFT)", ticker: "MSFT", contractSize: 100, pipSize: 0.01, defaultEntry: 420.00, defaultSL: 410.00 },
+            { name: "Amazon.com Inc. (AMZN)", ticker: "AMZN", contractSize: 100, pipSize: 0.01, defaultEntry: 180.00, defaultSL: 175.00 }
+        ],
+        indices: [
+            { name: "S&P 500", ticker: "US500", contractSize: 1, pipSize: 0.1, defaultEntry: 5300.0, defaultSL: 5250.0 },
+            { name: "Nasdaq 100", ticker: "US100", contractSize: 1, pipSize: 1.0, defaultEntry: 18500.0, defaultSL: 18300.0 },
+            { name: "Dow Jones 30", ticker: "US30", contractSize: 1, pipSize: 1.0, defaultEntry: 39500.0, defaultSL: 39200.0 },
+            { name: "DAX 40", ticker: "DE40", contractSize: 1, pipSize: 1.0, defaultEntry: 18700.0, defaultSL: 18500.0 }
+        ],
+        crypto: [
+            { name: "Bitcoin", ticker: "BTCUSD", contractSize: 1, pipSize: 1.0, defaultEntry: 68000.0, defaultSL: 66500.0 },
+            { name: "Ethereum", ticker: "ETHUSD", contractSize: 1, pipSize: 1.0, defaultEntry: 3800.0, defaultSL: 365.0 },
+            { name: "Solana", ticker: "SOLUSD", contractSize: 1, pipSize: 0.1, defaultEntry: 165.0, defaultSL: 155.0 },
+            { name: "XRPUSD - Ripple", ticker: "XRPUSD", contractSize: 10000, pipSize: 0.0001, defaultEntry: 0.5200, defaultSL: 0.5000 },
+            { name: "TRXUSD - Tron", ticker: "TRXUSD", contractSize: 100000, pipSize: 0.00001, defaultEntry: 0.1200, defaultSL: 0.1150 }
+        ],
+        metals: [
+            { name: "Gold", ticker: "XAUUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 2350.0, defaultSL: 2330.0 },
+            { name: "Silver", ticker: "XAGUSD", contractSize: 5000, pipSize: 0.01, defaultEntry: 30.50, defaultSL: 29.50 },
+            { name: "PL - Platinum", ticker: "XPTUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 980.0, defaultSL: 960.0 },
+            { name: "PA - Palladium", ticker: "XPDUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 950.0, defaultSL: 930.0 },
+            { name: "HG - Copper", ticker: "COPPER", contractSize: 25000, pipSize: 0.0001, defaultEntry: 4.5000, defaultSL: 4.4000 }
+        ],
+        oilgas: [
+            { name: "WTI Crude Oil (Нафта WTI)", ticker: "USOIL", contractSize: 1000, pipSize: 0.01, defaultEntry: 78.50, defaultSL: 77.00 },
+            { name: "Brent Crude Oil (Нафта Brent)", ticker: "UKOIL", contractSize: 1000, pipSize: 0.01, defaultEntry: 82.50, defaultSL: 81.00 },
+            { name: "Natural Gas (Природний Газ)", ticker: "NATGAS", contractSize: 10000, pipSize: 0.001, defaultEntry: 2.650, defaultSL: 2.500 }
+        ],
+        others: [
+            { name: "SUGAR - Sugar (Цукор)", ticker: "SUGAR", contractSize: 112000, pipSize: 0.01, defaultEntry: 19.50, defaultSL: 19.00 },
+            { name: "CORN - Corn (Кукурудза)", ticker: "CORN", contractSize: 5000, pipSize: 0.25, defaultEntry: 450.00, defaultSL: 440.00 },
+            { name: "WHEAT - Wheat (Пшениця)", ticker: "WHEAT", contractSize: 5000, pipSize: 0.25, defaultEntry: 600.00, defaultSL: 590.00 }
+        ]
+    };
+
+    let activeSector = 'forex';
+    let activeInstrument = instrumentsDb.forex[0];
+
+    // Динамічне створення іконки вкладки (Favicon) безпосередньо з вашого SVG-логотипу
+    function initDynamicFavicon() {
+        const svgElement = document.querySelector('.logo-svg-wrap svg');
+        if (!svgElement) return;
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const base64 = btoa(unescape(encodeURIComponent(svgString)));
+        
+        // Видалення існуючих іконок
+        const links = document.querySelectorAll("link[rel*='icon']");
+        links.forEach(l => l.parentNode.removeChild(l));
+        
+        // Створення нової іконки
+        const link = document.createElement('link');
+        link.type = 'image/svg+xml';
+        link.rel = 'icon';
+        link.href = 'data:image/svg+xml;base64,' + base64;
+        document.getElementsByTagName('head')[0].appendChild(link);
+    }
+
+    // Запуск при завантаженні
+    window.onload = function() {
+        initDynamicFavicon();
+        lucide.createIcons();
+        populateInstruments();
+    };
+
+    // Перемикання сектору
+    function switchSector(sectorKey, element) {
+        activeSector = sectorKey;
+        
+        // Візуальне оновлення табів
+        document.querySelectorAll('.sector-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+        
+        populateInstruments();
+    }
+
+    // Наповнення селектора інструментами
+    function populateInstruments() {
+        const select = document.getElementById('instrumentSelect');
+        select.innerHTML = '';
+        
+        const list = instrumentsDb[activeSector];
+        list.forEach((inst, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.innerText = `${inst.ticker} - ${inst.name}`;
+            select.appendChild(opt);
+        });
+
+        activeInstrument = list[0];
+        applyDefaultValues();
+    }
+
+    // Зміна конкретного активу
+    function onInstrumentChange() {
+        const index = document.getElementById('instrumentSelect').value;
+        activeInstrument = instrumentsDb[activeSector][index];
+        applyDefaultValues();
+    }
+
+    // Автоматичне підставлення стандартних цін для зручності
+    function applyDefaultValues() {
+        document.getElementById('entryPrice').value = activeInstrument.defaultEntry;
+        document.getElementById('stopLoss').value = activeInstrument.defaultSL;
+        calculate();
+    }
+
+    // Встановлення швидкого відсотка ризику
+    function applyRiskPreset(pct) {
+        document.getElementById('riskPct').value = pct;
+        calculate();
+    }
+
+    // Форматування валюти
+    function formatUSD(val) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(val);
+    }
+
+    // Головна математика розрахунків
+    function calculate() {
+        const balance = parseFloat(document.getElementById('balance').value) || 0;
+        const riskPct = parseFloat(document.getElementById('riskPct').value) || 0;
+        const entry = parseFloat(document.getElementById('entryPrice').value) || 0;
+        const sl = parseFloat(document.getElementById('stopLoss').value) || 0;
+
+        // Валідація
+        if (balance <= 0 || riskPct <= 0 || entry <= 0 || sl <= 0 || entry === sl) {
+            resetOutputs();
+            return;
+        }
+
+        // 1. Автоматичне визначення напрямку угоди
+        const directionBadge = document.getElementById('directionBadge');
+        let direction = "";
+        
+        if (entry > sl) {
+            direction = "BUY";
+            directionBadge.className = "direction-indicator dir-buy";
+            directionBadge.innerHTML = `<i data-lucide="arrow-up-circle" size="14"></i> BUY (Купівля / Long)`;
+        } else {
+            direction = "SELL";
+            directionBadge.className = "direction-indicator dir-sell";
+            directionBadge.innerHTML = `<i data-lucide="arrow-down-circle" size="14"></i> SELL (Продаж / Short)`;
+        }
+        lucide.createIcons();
+
+        // 2. Сума ризику в USD
+        const riskAmount = balance * (riskPct / 100);
+
+        // 3. Відстань до Стоп-Лоссу (в абсолютній ціні та %)
+        const priceDiff = Math.abs(entry - sl);
+        const slPercent = (priceDiff / entry) * 100;
+
+        // 4. Переведення відстані v класичні піпси (Pips) відповідно до активу
+        const pipsDistance = priceDiff / activeInstrument.pipSize;
+
+        // 5. Розрахунок лоту для MT4-MT5 (Універсальна формула контрактного розміру)
+        // Lots = Ризик_USD / (Різниця_Цін * Розмір_Контракту)
+        let lots = riskAmount / (priceDiff * activeInstrument.contractSize);
+        if (lots < 0) lots = 0;
+
+        // Округлимо лот до 2 знаків після коми (стандарт для більшості брокерів)
+        const displayLots = Math.max(0.01, Math.round(lots * 100) / 100);
+
+        // Кількість одиниць активу
+        const totalUnits = displayLots * activeInstrument.contractSize;
+
+        // Оновлення інтерфейсу результатів
+        document.getElementById('outLots').innerText = `${displayLots.toFixed(2)} Lots`;
+        document.getElementById('outUnits').innerText = `${new Intl.NumberFormat('uk-UA').format(Math.round(totalUnits))} одиниць активу`;
+        document.getElementById('outRiskAmount').innerText = formatUSD(riskAmount);
+        document.getElementById('outSlDistance').innerText = `${new Intl.NumberFormat('uk-UA').format(Math.round(pipsDistance))} pips (${slPercent.toFixed(2)}%)`;
+    }
+
+    function resetOutputs() {
+        const directionBadge = document.getElementById('directionBadge');
+        directionBadge.className = "direction-indicator dir-unknown";
+        directionBadge.innerHTML = `<i data-lucide="help-circle" size="14"></i> Напрямок: Очікування`;
+        
+        document.getElementById('outLots').innerText = '0.00 Lots';
+        document.getElementById('outUnits').innerText = '0 одиниць активу';
+        document.getElementById('outRiskAmount').innerText = '$0.00';
+        document.getElementById('outSlDistance').innerText = '0 pips (0.00%)';
+        lucide.createIcons();
+    }
+
+    // Сучасна та надійна функція копіювання торгового плану
+    function copyTradeSetup() {
+        const inst = activeInstrument.ticker;
+        const entry = document.getElementById('entryPrice').value;
+        const sl = document.getElementById('stopLoss').value;
+        const lots = document.getElementById('outLots').innerText;
+        const risk = document.getElementById('outRiskAmount').innerText;
+        const dist = document.getElementById('outSlDistance').innerText;
+
+        const isBuy = parseFloat(entry) > parseFloat(sl);
+        const action = isBuy ? "BUY (LONG) 🟢" : "SELL (SHORT) 🔴";
+
+        const textToCopy = `📊 AG Investa • Торговий сетап:\n` +
+                           `• Інструмент: ${inst}\n` +
+                           `• Напрямок: ${action}\n` +
+                           `• Ціна входу: ${entry} USD\n` +
+                           `• Stop Loss: ${sl} USD\n\n` +
+                           `🧮 Параметри ордера для MT4/MT5:\n` +
+                           `• Розрахований лот: ${lots}\n` +
+                           `• Фактичний ризик: ${risk}\n` +
+                           `• Стоп-лосс відстань: ${dist}\n\n` +
+                           `Згенеровано за допомогою професійного калькулятора AG Investa.`;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => showToast())
+                .catch(err => {
+                    console.warn('Clipboard API error, trying fallback', err);
+                    fallbackCopyText(textToCopy);
+                });
+        } else {
+            fallbackCopyText(textToCopy);
+        }
+    }
+
+    function fallbackCopyText(text) {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        temp.style.position = 'fixed';
+        temp.style.opacity = '0';
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+            document.execCommand('copy');
+            showToast();
+        } catch (err) {
+            console.error('Не вдалося скопіювати за допомогою fallback', err);
+        }
+        document.body.removeChild(temp);
+    }
+
+    // Показ тосту на 2 секунди
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
