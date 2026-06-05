@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AG Investa - Калькулятор розміру позиції</title>
     
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         :root {
             /* Фірмова преміум палітра AG Investa */
-            --bg-main: #0D0D0D;             /* Вугільно-Чорний (CMYK 0/0/0/92) */
+            --bg-main: #000000;             /* Абсолютний чорний для уникнення сірих квадратів на мобільних */
             --bg-card: #141414;             /* Вугільно-Чорний */
             --bg-input: #1C1C1C;            /* Світло-Чорний для полів */
             --border-color: #2E2E2E;        /* Темно-Сірий (CMYK 0/0/0/71) */
@@ -114,7 +112,7 @@
             align-items: center;
             justify-content: center;
             border: 1px solid var(--color-deep-brown);
-            background: #0D0D0D;
+            background: #000000;
         }
 
         .brand-name {
@@ -360,7 +358,7 @@
         .dir-sell {
             background: rgba(239, 68, 68, 0.12);
             color: var(--color-red);
-            border: 1px solid rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.255);
         }
 
         .dir-unknown {
@@ -452,23 +450,63 @@
         .metric-v.highlight {
             color: var(--color-orange);
         }
+        
+        .metric-v.profit-green {
+            color: var(--color-green);
+        }
 
         /* Обгортка дій та брендингу */
         .results-actions-wrap {
             margin-top: auto;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Центрування елементів по горизонталі всередині обгортки */
+            align-items: center;
             gap: 16px;
             padding-top: 20px;
             width: 100%;
+            position: relative;
         }
 
-        /* Оновлена велика помаранчева кнопка */
+        /* Попереджувальне вікно для низького балансу */
+        .balance-warning-box {
+            display: none; /* Керується через JS */
+            background: #1C1917;
+            border: 1px solid rgba(251, 101, 36, 0.4);
+            border-radius: 12px;
+            padding: 14px 34px 14px 14px;
+            color: #FDBA74;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            position: relative;
+            text-align: left;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .balance-warning-box .close-warning-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: color 0.2s;
+            user-select: none;
+        }
+
+        .balance-warning-box .close-warning-btn:hover {
+            color: var(--color-orange);
+        }
+
+        /* Оновлена велика помаранчева кнопка з крос-браузерним фіксом кольору */
         .btn-action {
             width: 100%;
-            background: linear-gradient(135deg, var(--color-orange) 0%, #D84D15 100%);
-            color: var(--color-white);
+            background: linear-gradient(135deg, #FB6524 0%, #D84D15 100%) !important;
+            background-color: #FB6524 !important; /* Фаллбек проти скидання кольору в мобільних браузерах */
+            color: var(--color-white) !important;
+            -webkit-appearance: none;
+            appearance: none;
             border: none;
             border-radius: 16px;
             padding: 18px 24px;
@@ -488,7 +526,7 @@
         .btn-action:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(251, 101, 36, 0.55);
-            background: linear-gradient(135deg, #FF7B40 0%, var(--color-orange) 100%);
+            background: linear-gradient(135deg, #FF7B40 0%, #FB6524 100%) !important;
         }
 
         .btn-action:active {
@@ -505,7 +543,7 @@
             color: var(--color-text-secondary);
             text-transform: uppercase;
             font-weight: 600;
-            margin-top: 8px; /* Гармонійний додатковий відступ під кнопкою */
+            margin-top: 8px;
         }
 
         /* Спливаюче сповіщення (Toast) */
@@ -542,15 +580,13 @@
 
 <div class="app-container">
     
-    <!-- LEFT PANEL: INPUTS -->
     <div class="calculator-inputs">
         <div class="brand-header">
             <div class="logo-group">
                 <div class="logo-svg-wrap">
-                    <!-- Повністю очищений оригінальний SVG логотип AG Investa -->
                     <svg id="Слой_1" data-name="Слой 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
-                        <rect fill="#0d0d0d" width="100" height="100"/>
-                        <path fill="#ffffff" d="M46.15,70.24c-.06-.18-.17-.34-.15-.48.16-1-.51-1.42-1.17-1.89s-1.33-1-2-1.48a1,1,0,0,1-.49-1.08,6.77,6.77,0,0,0-.18-1.74c-.08-.31-.43-.56-.69-.87.38-.51.82-1.15,1.32-1.74a2.41,2.41,0,0,0,.44-2.35c-.16-.6-.25-1.23-.46-1.83,0,.83,0,1.67,0,2.49a3.3,3.3,0,0,1-.39,1.34,9.75,9.75,0,0,1-6,4.73,2.17,2.17,0,0,0-1.36,1,2.7,2.7,0,0,1-.27.39c-.75.92-1.28,1.87-.75,3.1a1.93,1.93,0,0,1,0,.54H30.34a8.5,8.5,0,0,0,.42-.94,8.35,8.35,0,0,0,.17-1,1,1,0,0,1,.14-.43,8.37,8.37,0,0,0,1.79-4.28,1,1,0,0,1,.45-.68,3.11,3.11,0,0,0,2-2.78,13.81,13.81,0,0,1,2.53-6,3.71,3.71,0,0,1,1.54-1.15c1.5-.7,3.06-1.25,4.56-2a9,9,0,0,0,1.76-1.28c.42-.34.79-.7,1.38-.17-.3-.61.07-.86.42-1.21a42.09,42.09,0,0,0,3.05-3.22,5.76,5.76,0,0,1,2.89-1.93A5.7,5.7,0,0,0,55,42.53c.52-.35,1-.79,1.35-1.08a10.07,10.07,0,0,0,2.61,1c.51,0,1.08-.61,1.59-1-2.21.69-2.53.64-4.14-.66.4-.16.76-.31,1.13-.44s.74-.22,1.2-.35a12.55,12.55,0,0,1-1.64-.76,1.36,1.36,0,0,1-.54-.84,2.39,2.39,0,0,1,1.12-2.62,19,19,0,0,1,4.71-2.35c-.66.68-1.21,1.23-1.74,1.79a16,16,0,0,0-1.42,1.56c-.42.57-.28.86.4,1.09a3.3,3.3,0,0,0,.72.22c.57.07,1,.27,1,1l.19-.1-.26-1.23c.7-.44,1.55-.08,2.37-.11a8.48,8.48,0,0,1,3.88,1.14,12.74,12.74,0,0,0,2.64.86,1.55,1.55,0,0,1,1.07,2.36,2.45,2.45,0,0,0-2.68.54,3.46,3.46,0,0,1,2.6-.08A2.53,2.53,0,0,1,69.6,44a6.5,6.5,0,0,0-2.1,1.68,9.3,9.3,0,0,0-2.8,5c-.14,1.13-.1,2.28-.24,3.41a3.21,3.21,0,0,1-.56,1.62q-1.93,2.4-4,4.65a8.83,8.83,0,0,1-1.63,1.11c-.87-1.8-.12-3.38.14-5,.14-.87.35-1.74.49-2.61a1.46,1.46,0,0,0-.09-.83C57.91,51.39,57,49.68,56,48c.52,1.29,1,2.61,1.57,3.88A4.55,4.55,0,0,1,58,55c-.32,1.27-.48,2.59-.73,4l-1.83-1.57-.08,0a4.37,4.37,0,0,0,.37.48,8.8,8.8,0,0,1,2.23,4.73,18,18,0,0,0,.49,2,9.34,9.34,0,0,0,2,3.44,17.79,17.79,0,0,1,1.42,2.09c-.68.2-.68.2-1.56-.8,0,.19,0,.33,0,.47a4.24,4.24,0,0,0,.1.49c-.87,0-1.71,0-2.54,0a.84.84,0,0,1-.48-.68c0-.61.23-1.19-.54-1.54-.18-.08-.24-.56-.25-.86a2.6,2.6,0,0,0-1-2.07c-1.48-1.09-2.41-2.65-3.61-4a25.17,25.17,0,0,0-1.63-1.93,2.58,2.58,0,0,1-.67-2.49,17.52,17.52,0,0,0,.12-2.81c-.32,1.37-.66,2.74-.94,4.12a1.12,1.12,0,0,0,.29.82c1,1.12,2.06,2.2,3.21,3.42l-8.46-.52,0,.2,3.59.55a7.16,7.16,0,0,1-1.62,3.14c1.24,1.56,3,2.61,4,4.45ZM67.47,44.36l0-.12c-.21.06-.42.11-.63.18-1,.38-2,.77-3.05,1.13a1.14,1.14,0,0,1-.7.06C62,45.27,61,45,60.78,43.7c0,0-.06,0-.08,0a1.6,1.6,0,0,0,1.14,2c.39.15.75.41,1.14.59a.84.84,0,0,0,.55.08C64.85,45.69,66.16,45,67.47,44.36ZM63,39.94a1.31,1.31,0,0,0,1.85,0C64.24,39.76,63.62,39.26,63,39.94Zm6.41.7c0-.55-.39-.51-.73-.48-.08,0-.14.13-.21.2.25.11.49.23.74.32C69.28,40.7,69.36,40.65,69.42,40.64Z"/>
+                        <rect fill="#000000" width="100" height="100"/>
+                        <path fill="#ffffff" d="M46.15,70.24c-.06-.18-.17-.34-.15-.48.16-1-.51-1.42-1.17-1.89s-1.33-1-2-1.48a1,1,0,0,1-.49-1.08,6.77,6.77,0,0,0-.18-1.74c-.08-.31-.43-.56-.69-.87.38-.51.82-1.15,1.32-1.74a2.41,2.41,0,0,0,.44-2.35c-.16-.6-.25-1.23-.46-1.83,0,.83,0,1.67,0,2.49a3.3,3.3,0,0,1-.39,1.34,9.75,9.75,0,0,1-6,4.73,2.17,2.17,0,0,0-1.36,1,2.7,2.7,0,0,1-.27.39c-.75.92-1.28,1.87-.75,3.1a1.93,1.93,0,0,1,0,.54H30.34a8.5,8.5,0,0,0,.42-.94,8.35,8.35,0,0,0,.17-1,1,1,0,0,1,.14-.43,8.37,8.37,0,0,0,1.79-4.28,1,1,0,0,1,.45-.68,3.11,3.11,0,0,0,2-2.78,13.81,13.81,0,0,1,2.53-6,3.71,3.71,0,0,1,1.54-1.15c1.5-.7,3.06-1.25,4.56-2a9,9,0,0,0,1.76-1.28c.42-.34.79-.7,1.38-.17-.3-.61.07-.86.42-1.21a42.09,42.09,0,0,0,3.05-3.22,5.76,5.76,0,0,1,2.89-1.93A5.7,5.7,0,0,0,55,42.53c.52-.35,1-.79,1.35-1.08a10.07,10.07,0,0,0,2.61,1c.51,0,1.08-.61,1.59-1-2.21.69-2.53.64-4.14-.66.4-.16.76-.31,1.13-.44s.74-.22,1.2-.35a12.55,12.55,0,0,1-1.64-.76,1.36,1.36,0,0,1-.54-.84,2.39,2.39,0,0,1,1.12-2.62,19,19,0,0,1,4.71-2.35c-.66.68-1.21,1.23-1.74,1.79a16,16,0,0,0-1.42,1.56c-.42.57-.28.86.4,1.09a3.3,3.3,0,0,0,.72.22c.57.07,1,.27,1,1l.19-.1-.26-1.23c.7-.44,1.55-.08,2.37-.11a8.48,8.48,0,0,1,3.88,1.14,12.74,12.74,0,0,0,2.64.86,1.55,1.55,0,0,1,1.07,2.36,2.45,2.45,0,0,0-2.68.54,3.46,3.46,0,0,1,2.6-.08A2.53,2.53,0,0,1,69.6,44a6.5,6.5,0,0,0-2.1,1.68,9.3,9.3,0,0,0-2.8,5c-.14,1.13-.1,2.28-.24,3.41a3.21,3.21,0,0,1-.56,1.62q-1.93,2.4-4,4.65a8.83,8.83,0,0,1-1.63,1.11c-.87-1.8-.12-3.38.14-5,.14-.87.35-1.74.49-2.61a1.46,1.46,0,0,0-.09-.83C57.91,51.39,57,49.68,56,48c.52,1.29,1,2.61,1.57,3.88A4.55,4.55,0,0,1,58,55c-.32,1.27-.48,2.59-.73,4 l-1.83-1.57-.08,0a4.37,4.37,0,0,0,.37.48,8.8,8.8,0,0,1,2.23,4.73,18,18,0,0,0,.49,2,9.34,9.34,0,0,0,2,3.44,17.79,17.79,0,0,1,1.42,2.09c-.68.2-.68.2-1.56-.8,0,.19,0,.33,0,.47a4.24,4.24,0,0,0,.1.49c-.87,0-1.71,0-2.54,0a.84.84,0,0,1-.48-.68c0-.61.23-1.19-.54-1.54-.18-.08-.24-.56-.25-.86a2.6,2.6,0,0,0-1-2.07c-1.48-1.09-2.41-2.65-3.61-4a25.17,25.17,0,0,0-1.63-1.93,2.58,2.58,0,0,1-.67-2.49,17.52,17.52,0,0,0,.12-2.81c-.32,1.37-.66,2.74-.94,4.12a1.12,1.12,0,0,0,.29.82c1,1.12,2.06,2.2,3.21,3.42l-8.46-.52,0,.2,3.59.55a7.16,7.16,0,0,1-1.62,3.14c1.24,1.56,3,2.61,4,4.45ZM67.47,44.36l0-.12c-.21.06-.42.11-.63.18-1,.38-2,.77-3.05,1.13a1.14,1.14,0,0,1-.7.06C62,45.27,61,45,60.78,43.7c0,0-.06,0-.08,0a1.6,1.6,0,0,0,1.14,2c.39.15.75.41,1.14.59a.84.84,0,0,0,.55.08C64.85,45.69,66.16,45,67.47,44.36ZM63,39.94a1.31,1.31,0,0,0,1.85,0C64.24,39.76,63.62,39.26,63,39.94Zm6.41.7c0-.55-.39-.51-.73-.48-.08,0-.14.13-.21.2.25.11.49.23.74.32C69.28,40.7,69.36,40.65,69.42,40.64Z"/>
                         <path fill="#ffffff" d="M60.43,60.64l3-3.38c.39,1.37.82,2.67,1.11,4a1.86,1.86,0,0,1-.35,1.26c-.67,1-1.48,1.91-2.12,2.92-.52.83-1.36.88-2.13,1.15a.29.29,0,0,1-.25,0,12.6,12.6,0,0,1-.65-2,.64.64,0,0,1,.75-.6,1.38,1.38,0,0,0,.88-.5c.92-.94.93-1.26.13-2.25Z"/>
                         <path fill="#ffffff" d="M37.64,53.52c-.31.56-.56,1-.85,1.5a.67.67,0,0,1-.44.22,7.48,7.48,0,0,1-.82,0,1.47,1.47,0,0,0-1.59,1.13c-.21.81-.38,1.63-.51,2.45a3.55,3.55,0,0,1-1.94,2.65,1.12,1.12,0,0,0-.48.43,3.25,3.25,0,0,1-2.48,2.17c.24-.7.48-1.41.74-2.11a1.15,1.15,0,0,1,1.09-.88A2.28,2.28,0,0,0,32.69,59c.13-1,.16-1.91.28-2.85a2.48,2.48,0,0,1,2.15-2.37,4,4,0,0,1,.48-.07Z"/>
                         <path fill="#ffffff" d="M69.6,34.4c1.23,1.39,1.29,3.12,0,4.23a1,1,0,0,1-.82.17c-.65-.23-1.27-.57-2-.93,1-.13,2.06-.11,2.44-1A9.57,9.57,0,0,0,69.6,34.4Z"/>
@@ -562,7 +598,6 @@
             <div class="tool-title" id="dynamicTitle">Калькулятор розміру позиції</div>
         </div>
 
-        <!-- Крок 1: Оберіть сектор ринку -->
         <div style="margin-bottom: 12px;"><label>1. Оберіть сектор ринку</label></div>
         <div class="sectors-grid">
             <button class="sector-btn active" onclick="switchSector('forex', this)">
@@ -588,14 +623,12 @@
             </button>
         </div>
 
-        <!-- Крок 2: Оберіть торговий інструмент -->
         <div class="instrument-selector-group">
             <label for="instrumentSelect">2. Оберіть торговий інструмент</label>
             <select id="instrumentSelect" class="instrument-select" onchange="onInstrumentChange()">
             </select>
         </div>
 
-        <!-- Крок 3: Параметри угоди -->
         <div class="form-row">
             <div class="form-group">
                 <label for="balance">Баланс рахунку</label>
@@ -624,7 +657,7 @@
             <div class="form-group">
                 <label for="entryPrice">Ціна входу</label>
                 <div class="input-wrapper">
-                    <input type="number" id="entryPrice" value="1.0850" step="any" oninput="calculate()">
+                    <input type="number" id="entryPrice" value="1.0850" step="any" oninput="onPriceFieldInput()">
                     <span class="input-prefix">USD</span>
                 </div>
             </div>
@@ -636,9 +669,18 @@
                 </div>
             </div>
         </div>
+        
+        <div class="form-row" style="margin-top: 20px; margin-bottom: 0;">
+            <div class="form-group">
+                <label for="takeProfit">Ціна Take Profit</label>
+                <div class="input-wrapper">
+                    <input type="number" id="takeProfit" value="1.1000" step="any" oninput="calculate()">
+                    <span class="input-prefix">USD</span>
+                </div>
+            </div>
+            <div class="form-group"></div> </div>
     </div>
 
-    <!-- RIGHT PANEL: RESULTS -->
     <div class="calculator-results">
         <div>
             <div class="results-header">
@@ -649,27 +691,30 @@
                 <div class="results-subtitle">Розраховані параметри вашого торгового ордера</div>
             </div>
 
-            <!-- Бейдж напрямку -->
             <div>
                 <span id="directionBadge" class="direction-indicator dir-unknown">
                     <i data-lucide="help-circle" size="14"></i> Напрямок: Очікування
                 </span>
             </div>
 
-            <!-- Велике табло з результатом лотів -->
             <div class="primary-metric-card">
                 <div class="metric-label-big">Розмір позиції (MT4 / MT5)</div>
                 <div class="metric-val-big" id="outLots">0.00 Lots</div>
                 <div class="metric-val-sub" id="outUnits">0 одиниць активу</div>
             </div>
 
-            <!-- Детальні результати -->
             <div class="metrics-list">
                 <div class="metric-row">
                     <span class="metric-lbl">
                         <i data-lucide="dollar-sign" size="14"></i> Сума ризику
                     </span>
                     <span class="metric-v" id="outRiskAmount">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-lbl">
+                        <i data-lucide="trending-up" size="14"></i> Сума прибутку
+                    </span>
+                    <span class="metric-v profit-green" id="outProfitAmount">$0.00</span>
                 </div>
                 <div class="metric-row" style="border-bottom: none;">
                     <span class="metric-lbl">
@@ -680,8 +725,12 @@
             </div>
         </div>
 
-        <!-- Контейнер дій та брендингу -->
         <div class="results-actions-wrap">
+            <div class="balance-warning-box" id="balanceWarning">
+                <span class="close-warning-btn" onclick="closeWarningBox()">✕</span>
+                Ваш баланс рахунку не дозволяє БЕЗПЕЧНО торгувати даним торговим інструментом. Рекомендуємо розглянути збільшення торгового балансу за для зменшення потенційних ризиків або торгувати на платформі Libertex.
+            </div>
+            
             <button class="btn-action" onclick="copyTradeSetup()">
                 <i data-lucide="copy" size="18"></i> Скопіювати сетап
             </button>
@@ -690,7 +739,6 @@
     </div>
 </div>
 
-<!-- Спливаюче сповіщення -->
 <div class="toast" id="toast">
     <i data-lucide="check-circle-2" size="18" style="color: var(--color-orange);"></i>
     <span>Дані лоту успішно скопійовано!</span>
@@ -700,61 +748,62 @@
     // Оновлена та розширена база даних торгових інструментів за секторами ринку
     const instrumentsDb = {
         forex: [
-            { name: "EUR/USD (Євро / Долар США)", ticker: "EURUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.0850, defaultSL: 1.0800 },
-            { name: "GBP/USD (Фунт Стерлінгів / Долар США)", ticker: "GBPUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.2650, defaultSL: 1.2600 },
-            { name: "USD/JPY (Долар США / Японська Єна)", ticker: "USDJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 156.50, defaultSL: 156.00 },
-            { name: "AUD/USD (Австралійський долар / Долар США)", ticker: "AUDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6650, defaultSL: 0.6610 },
-            { name: "USD/CAD (Долар США / Канадський Долар)", ticker: "USDCAD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.3650, defaultSL: 1.3700 },
-            { name: "USD/CHF (Долар США / Швейцарський франк)", ticker: "USDCHF", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.9050, defaultSL: 0.9100 },
-            { name: "NZD/USD (Новозеландський долар / Долар США)", ticker: "NZDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6120, defaultSL: 0.6080 },
-            { name: "GBP/JPY (Фунт Стерлінгів / Єна)", ticker: "GBPJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 198.50, defaultSL: 197.50 },
-            { name: "EUR/JPY (Євро / Єна)", ticker: "EURJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 169.50, defaultSL: 168.50 },
-            { name: "EUR/AUD (Євро / Австралійський долар)", ticker: "EURAUD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.6320, defaultSL: 1.6250 }
+            { name: "EUR/USD (Євро / Долар США)", ticker: "EURUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.0850, defaultSL: 1.0800, defaultTP: 1.1000 },
+            { name: "GBP/USD (Фунт Стерлінгів / Долар США)", ticker: "GBPUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.2650, defaultSL: 1.2600, defaultTP: 1.2800 },
+            { name: "USD/JPY (Долар США / Японська Єна)", ticker: "USDJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 156.50, defaultSL: 156.00, defaultTP: 158.00 },
+            { name: "AUD/USD (Австралійський долар / Долар США)", ticker: "AUDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6650, defaultSL: 0.6610, defaultTP: 0.6750 },
+            { name: "USD/CAD (Долар США / Канадський Долар)", ticker: "USDCAD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.3650, defaultSL: 1.3700, defaultTP: 1.3500 },
+            { name: "USD/CHF (Долар США / Швейцарський франк)", ticker: "USDCHF", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.9050, defaultSL: 0.9100, defaultTP: 0.8900 },
+            { name: "NZD/USD (Новозеландський долар / Долар США)", ticker: "NZDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6120, defaultSL: 0.6080, defaultTP: 0.6250 },
+            { name: "GBP/JPY (Фунт Стерлінгів / Єна)", ticker: "GBPJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 198.50, defaultSL: 197.50, defaultTP: 201.00 },
+            { name: "EUR/JPY (Євро / Єна)", ticker: "EURJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 169.50, defaultSL: 168.50, defaultTP: 172.00 },
+            { name: "EUR/AUD (Євро / Австралійський долар)", ticker: "EURAUD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.6320, defaultSL: 1.6250, defaultTP: 1.6500 }
         ],
         stocks: [
-            { name: "Apple Inc. (AAPL)", ticker: "AAPL", contractSize: 100, pipSize: 0.01, defaultEntry: 190.00, defaultSL: 185.00 },
-            { name: "Tesla Inc. (TSLA)", ticker: "TSLA", contractSize: 100, pipSize: 0.01, defaultEntry: 175.00, defaultSL: 170.00 },
-            { name: "NVIDIA Corp. (NVDA)", ticker: "NVDA", contractSize: 100, pipSize: 0.01, defaultEntry: 950.00, defaultSL: 920.00 },
-            { name: "Microsoft Corp. (MSFT)", ticker: "MSFT", contractSize: 100, pipSize: 0.01, defaultEntry: 420.00, defaultSL: 410.00 },
-            { name: "Amazon.com Inc. (AMZN)", ticker: "AMZN", contractSize: 100, pipSize: 0.01, defaultEntry: 180.00, defaultSL: 175.00 }
+            { name: "Apple Inc. (AAPL)", ticker: "AAPL", contractSize: 100, pipSize: 0.01, defaultEntry: 190.00, defaultSL: 185.00, defaultTP: 205.00 },
+            { name: "Tesla Inc. (TSLA)", ticker: "TSLA", contractSize: 100, pipSize: 0.01, defaultEntry: 175.00, defaultSL: 170.00, defaultTP: 190.00 },
+            { name: "NVIDIA Corp. (NVDA)", ticker: "NVDA", contractSize: 100, pipSize: 0.01, defaultEntry: 950.00, defaultSL: 920.00, defaultTP: 1050.00 },
+            { name: "Microsoft Corp. (MSFT)", ticker: "MSFT", contractSize: 100, pipSize: 0.01, defaultEntry: 420.00, defaultSL: 410.00, defaultTP: 445.00 },
+            { name: "Amazon.com Inc. (AMZN)", ticker: "AMZN", contractSize: 100, pipSize: 0.01, defaultEntry: 180.00, defaultSL: 175.00, defaultTP: 195.00 }
         ],
         indices: [
-            { name: "S&P 500", ticker: "US500", contractSize: 1, pipSize: 0.1, defaultEntry: 5300.0, defaultSL: 5250.0 },
-            { name: "Nasdaq 100", ticker: "US100", contractSize: 1, pipSize: 1.0, defaultEntry: 18500.0, defaultSL: 18300.0 },
-            { name: "Dow Jones 30", ticker: "US30", contractSize: 1, pipSize: 1.0, defaultEntry: 39500.0, defaultSL: 39200.0 },
-            { name: "DAX 40", ticker: "DE40", contractSize: 1, pipSize: 1.0, defaultEntry: 18700.0, defaultSL: 18500.0 },
-            { name: "U.S. Dollar Index Cash - USDX", ticker: "USDX", contractSize: 1000, pipSize: 0.01, defaultEntry: 104.50, defaultSL: 103.80 }
+            { name: "S&P 500", ticker: "US500", contractSize: 1, pipSize: 0.1, defaultEntry: 5300.0, defaultSL: 5250.0, defaultTP: 5450.0 },
+            { name: "Nasdaq 100", ticker: "US100", contractSize: 1, pipSize: 1.0, defaultEntry: 18500.0, defaultSL: 18300.0, defaultTP: 19000.0 },
+            { name: "Dow Jones 30", ticker: "US30", contractSize: 1, pipSize: 1.0, defaultEntry: 39500.0, defaultSL: 39200.0, defaultTP: 40500.0 },
+            { name: "DAX 40", ticker: "DE40", contractSize: 1, pipSize: 1.0, defaultEntry: 18700.0, defaultSL: 18500.0, defaultTP: 19200.0 },
+            { name: "U.S. Dollar Index Cash - USDX", ticker: "USDX", contractSize: 1000, pipSize: 0.01, defaultEntry: 104.50, defaultSL: 103.80, defaultTP: 106.00 }
         ],
         crypto: [
-            { name: "Bitcoin", ticker: "BTCUSD", contractSize: 1, pipSize: 1.0, defaultEntry: 68000.0, defaultSL: 66500.0 },
-            { name: "Ethereum", ticker: "ETHUSD", contractSize: 1, pipSize: 1.0, defaultEntry: 3800.0, defaultSL: 365.0 },
-            { name: "Solana", ticker: "SOLUSD", contractSize: 1, pipSize: 0.1, defaultEntry: 165.0, defaultSL: 155.0 },
-            { name: "XRPUSD - Ripple", ticker: "XRPUSD", contractSize: 10000, pipSize: 0.0001, defaultEntry: 0.5200, defaultSL: 0.5000 },
-            { name: "TRXUSD - Tron", ticker: "TRXUSD", contractSize: 100000, pipSize: 0.00001, defaultEntry: 0.1200, defaultSL: 0.1150 }
+            { name: "Bitcoin", ticker: "BTCUSD", contractSize: 1, pipSize: 1.0, defaultEntry: 68000.0, defaultSL: 66500.0, defaultTP: 72000.0 },
+            { name: "Ethereum", ticker: "ETHUSD", contractSize: 1, pipSize: 1.0, defaultEntry: 3800.0, defaultSL: 3650.0, defaultTP: 4150.0 },
+            { name: "Solana", ticker: "SOLUSD", contractSize: 1, pipSize: 0.1, defaultEntry: 165.0, defaultSL: 155.0, defaultTP: 185.0 },
+            { name: "XRPUSD - Ripple", ticker: "XRPUSD", contractSize: 10000, pipSize: 0.0001, defaultEntry: 0.5200, defaultSL: 0.5000, defaultTP: 0.5800 },
+            { name: "TRXUSD - Tron", ticker: "TRXUSD", contractSize: 100000, pipSize: 0.00001, defaultEntry: 0.1200, defaultSL: 0.1150, defaultTP: 0.1350 }
         ],
         metals: [
-            { name: "Gold", ticker: "XAUUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 2350.0, defaultSL: 2330.0 },
-            { name: "Silver", ticker: "XAGUSD", contractSize: 5000, pipSize: 0.01, defaultEntry: 30.50, defaultSL: 29.50 },
-            { name: "PL - Platinum", ticker: "XPTUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 980.0, defaultSL: 960.0 },
-            { name: "PA - Palladium", ticker: "XPDUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 950.0, defaultSL: 930.0 },
-            { name: "HG - Copper", ticker: "COPPER", contractSize: 25000, pipSize: 0.0001, defaultEntry: 4.5000, defaultSL: 4.4000 }
+            { name: "Gold", ticker: "XAUUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 2350.0, defaultSL: 2330.0, defaultTP: 2410.0 },
+            { name: "Silver", ticker: "XAGUSD", contractSize: 5000, pipSize: 0.01, defaultEntry: 30.50, defaultSL: 29.50, defaultTP: 33.00 },
+            { name: "PL - Platinum", ticker: "XPTUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 980.0, defaultSL: 960.0, defaultTP: 1040.0 },
+            { name: "PA - Palladium", ticker: "XPDUSD", contractSize: 100, pipSize: 0.1, defaultEntry: 950.0, defaultSL: 930.0, defaultTP: 1010.0 },
+            { name: "HG - Copper", ticker: "COPPER", contractSize: 25000, pipSize: 0.0001, defaultEntry: 4.5000, defaultSL: 4.4000, defaultTP: 4.8000 }
         ],
         oilgas: [
-            { name: "WTI Crude Oil (Нафта WTI)", ticker: "USOIL", contractSize: 1000, pipSize: 0.01, defaultEntry: 78.50, defaultSL: 77.00 },
-            { name: "Brent Crude Oil (Нафта Brent)", ticker: "UKOIL", contractSize: 1000, pipSize: 0.01, defaultEntry: 82.50, defaultSL: 81.00 },
-            { name: "Natural Gas (Природний Газ)", ticker: "NATGAS", contractSize: 10000, pipSize: 0.001, defaultEntry: 2.650, defaultSL: 2.500 }
+            { name: "WTI Crude Oil (Нафта WTI)", ticker: "USOIL", contractSize: 1000, pipSize: 0.01, defaultEntry: 78.50, defaultSL: 77.00, defaultTP: 82.00 },
+            { name: "Brent Crude Oil (Нафта Brent)", ticker: "UKOIL", contractSize: 1000, pipSize: 0.01, defaultEntry: 82.50, defaultSL: 81.00, defaultTP: 86.00 },
+            { name: "Natural Gas (Природний Газ)", ticker: "NATGAS", contractSize: 10000, pipSize: 0.001, defaultEntry: 2.650, defaultSL: 2.500, defaultTP: 3.000 }
         ],
         others: [
-            { name: "SUGAR - Sugar (Цукор)", ticker: "SUGAR", contractSize: 112000, pipSize: 0.01, defaultEntry: 19.50, defaultSL: 19.00 },
-            { name: "CORN - Corn (Кукурудза)", ticker: "CORN", contractSize: 5000, pipSize: 0.25, defaultEntry: 450.00, defaultSL: 440.00 },
-            { name: "WHEAT - Wheat (Пшениця)", ticker: "WHEAT", contractSize: 5000, pipSize: 0.25, defaultEntry: 600.00, defaultSL: 590.00 },
-            { name: "COFFEE - Coffee (кава)", ticker: "COFFEE", contractSize: 37500, pipSize: 0.01, defaultEntry: 220.00, defaultSL: 215.00 },
-            { name: "COCOA - Cocoa (какао)", ticker: "COCOA", contractSize: 10, pipSize: 1.0, defaultEntry: 8500.00, defaultSL: 8300.00 }
+            { name: "SUGAR - Sugar (Цукор)", ticker: "SUGAR", contractSize: 112000, pipSize: 0.01, defaultEntry: 19.50, defaultSL: 19.00, defaultTP: 21.00 },
+            { name: "CORN - Corn (Кукурудза)", ticker: "CORN", contractSize: 5000, pipSize: 0.25, defaultEntry: 450.00, defaultSL: 440.00, defaultTP: 480.00 },
+            { name: "WHEAT - Wheat (Пшениця)", ticker: "WHEAT", contractSize: 5000, pipSize: 0.25, defaultEntry: 600.00, defaultSL: 590.00, defaultTP: 630.00 },
+            { name: "COFFEE - Coffee (кава)", ticker: "COFFEE", contractSize: 37500, pipSize: 0.01, defaultEntry: 220.00, defaultSL: 215.00, defaultTP: 235.00 },
+            { name: "COCOA - Cocoa (какао)", ticker: "COCOA", contractSize: 10, pipSize: 1.0, defaultEntry: 8500.00, defaultSL: 8300.00, defaultTP: 9100.00 }
         ]
     };
 
     let activeSector = 'forex';
     let activeInstrument = instrumentsDb.forex[0];
+    let isWarningClosedByUser = false; // Стан закриття вікна користувачем
 
     // Динамічне створення іконки вкладки (Favicon) безпосередньо з вашого SVG-логотипу
     function initDynamicFavicon() {
@@ -786,6 +835,7 @@
     // Перемикання сектору
     function switchSector(sectorKey, element) {
         activeSector = sectorKey;
+        isWarningClosedByUser = false; // Скидаємо стан закриття при зміні сектору
         
         // Візуальне оновлення табів
         document.querySelectorAll('.sector-btn').forEach(btn => btn.classList.remove('active'));
@@ -822,12 +872,34 @@
     function applyDefaultValues() {
         document.getElementById('entryPrice').value = activeInstrument.defaultEntry;
         document.getElementById('stopLoss').value = activeInstrument.defaultSL;
+        document.getElementById('takeProfit').value = activeInstrument.defaultTP || "";
+        document.getElementById('balanceWarning').style.display = "none"; // Приховуємо при зміні активу
         calculate();
     }
 
     // Встановлення швидкого відсотка ризику
     function applyRiskPreset(pct) {
         document.getElementById('riskPct').value = pct;
+        calculate();
+    }
+
+    // Закриття попереджувального вікна хрестиком
+    function closeWarningBox() {
+        document.getElementById('balanceWarning').style.display = "none";
+        isWarningClosedByUser = true;
+    }
+
+    // Обробник старту введення ціни входу (Контролює появу попередження)
+    function onPriceFieldInput() {
+        const balance = parseFloat(document.getElementById('balance').value) || 0;
+        const warningBox = document.getElementById('balanceWarning');
+        
+        if (activeSector !== 'forex' && balance < 2500 && !isWarningClosedByUser) {
+            warningBox.style.display = "block";
+        } else {
+            warningBox.style.display = "none";
+        }
+        
         calculate();
     }
 
@@ -847,16 +919,28 @@
         const riskPct = parseFloat(document.getElementById('riskPct').value) || 0;
         const entry = parseFloat(document.getElementById('entryPrice').value) || 0;
         const sl = parseFloat(document.getElementById('stopLoss').value) || 0;
+        const tp = parseFloat(document.getElementById('takeProfit').value) || 0;
 
-        // Валідація
+        // Валідація базових полів
         if (balance <= 0 || riskPct <= 0 || entry <= 0 || sl <= 0 || entry === sl) {
             resetOutputs();
             return;
         }
 
+        // Динамічний контроль вікна попередження при зміні балансу на льоту
+        const warningBox = document.getElementById('balanceWarning');
+        if (activeSector !== 'forex' && balance < 2500 && !isWarningClosedByUser) {
+            // Вікно активується тільки якщо людина вже чіпала форму ціни або пресети активовані
+            if (warningBox.style.display === "block" || entry !== activeInstrument.defaultEntry) {
+                warningBox.style.display = "block";
+            }
+        } else {
+            warningBox.style.display = "none";
+        }
+
         // 1. Автоматичне визначення напрямку угоди
         const directionBadge = document.getElementById('directionBadge');
-        let direction = "";
+        let direction = "BUY";
         
         if (entry > sl) {
             direction = "BUY";
@@ -872,28 +956,38 @@
         // 2. Сума ризику в USD
         const riskAmount = balance * (riskPct / 100);
 
-        // 3. Відстань до Стоп-Лоссу (в абсолютній ціні та %)
+        // 3. Відстань до Стоп-Лоссу
         const priceDiff = Math.abs(entry - sl);
         const slPercent = (priceDiff / entry) * 100;
-
-        // 4. Переведення відстані v класичні піпси (Pips) відповідно до активу
         const pipsDistance = priceDiff / activeInstrument.pipSize;
 
-        // 5. Розрахунок лоту для MT4-MT5 (Універсальна формула контрактного розміру)
-        // Lots = Ризик_USD / (Різниця_Цін * Розмір_Контракту)
+        // 4. Розрахунок лоту для MT4-MT5
         let lots = riskAmount / (priceDiff * activeInstrument.contractSize);
         if (lots < 0) lots = 0;
-
-        // Округлимо лот до 2 знаків після коми (стандарт для більшості брокерів)
         const displayLots = Math.max(0.01, Math.round(lots * 100) / 100);
 
         // Кількість одиниць активу
         const totalUnits = displayLots * activeInstrument.contractSize;
 
+        // 5. Обчислення Суми потенційного Прибутку (Take Profit)
+        let profitAmount = 0;
+        if (tp > 0) {
+            let tpPriceDiff = 0;
+            if (direction === "BUY") {
+                tpPriceDiff = tp - entry; // Для BUY профіт якщо TP вище входу
+            } else {
+                tpPriceDiff = entry - tp; // Для SELL профіт якщо TP нижче входу
+            }
+            profitAmount = totalUnits * tpPriceDiff;
+        }
+
         // Оновлення інтерфейсу результатів
         document.getElementById('outLots').innerText = `${displayLots.toFixed(2)} Lots`;
         document.getElementById('outUnits').innerText = `${new Intl.NumberFormat('uk-UA').format(Math.round(totalUnits))} одиниць активу`;
         document.getElementById('outRiskAmount').innerText = formatUSD(riskAmount);
+        
+        // Виведення Суми Прибутку (якщо TP валідний, інакше показуємо $0.00 або мінус при помилці)
+        document.getElementById('outProfitAmount').innerText = profitAmount > 0 ? formatUSD(profitAmount) : formatUSD(0);
         document.getElementById('outSlDistance').innerText = `${new Intl.NumberFormat('uk-UA').format(Math.round(pipsDistance))} pips (${slPercent.toFixed(2)}%)`;
     }
 
@@ -905,17 +999,20 @@
         document.getElementById('outLots').innerText = '0.00 Lots';
         document.getElementById('outUnits').innerText = '0 одиниць активу';
         document.getElementById('outRiskAmount').innerText = '$0.00';
+        document.getElementById('outProfitAmount').innerText = '$0.00';
         document.getElementById('outSlDistance').innerText = '0 pips (0.00%)';
         lucide.createIcons();
     }
 
-    // Сучасна та надійна функція копіювання торгового плану
+    // Функція копіювання торгового сетапу з урахуванням доданого поля тейк-профіту
     function copyTradeSetup() {
         const inst = activeInstrument.ticker;
         const entry = document.getElementById('entryPrice').value;
         const sl = document.getElementById('stopLoss').value;
+        const tp = document.getElementById('takeProfit').value || "Не вказано";
         const lots = document.getElementById('outLots').innerText;
         const risk = document.getElementById('outRiskAmount').innerText;
+        const profit = document.getElementById('outProfitAmount').innerText;
         const dist = document.getElementById('outSlDistance').innerText;
 
         const isBuy = parseFloat(entry) > parseFloat(sl);
@@ -925,10 +1022,12 @@
                            `• Інструмент: ${inst}\n` +
                            `• Напрямок: ${action}\n` +
                            `• Ціна входу: ${entry} USD\n` +
-                           `• Stop Loss: ${sl} USD\n\n` +
+                           `• Stop Loss: ${sl} USD\n` +
+                           `• Take Profit: ${tp} USD\n\n` +
                            `🧮 Параметри ордера для MT4/MT5:\n` +
                            `• Розрахований лот: ${lots}\n` +
-                           `• Фактичний ризик: ${risk}\n` +
+                           `• Потенційний ризик: ${risk}\n` +
+                           `• Очікуваний прибуток: ${profit}\n` +
                            `• Стоп-лосс відстань: ${dist}\n\n` +
                            `Згенеровано за допомогою професійного калькулятора AG Investa.`;
 
