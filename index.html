@@ -765,6 +765,7 @@
             { name: "NZD/USD (Новозеландський долар / Долар США)", ticker: "NZDUSD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 0.6120, defaultSL: 0.6080, defaultTP: 0.6250 },
             { name: "GBP/JPY (Фунт Стерлінгів / Єна)", ticker: "GBPJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 198.50, defaultSL: 197.50, defaultTP: 201.00 },
             { name: "EUR/JPY (Євро / Єна)", ticker: "EURJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 169.50, defaultSL: 168.50, defaultTP: 172.00 },
+            { name: "AUD/JPY (Австралійський долар / Єна)", ticker: "AUDJPY", contractSize: 100000, pipSize: 0.01, defaultEntry: 104.50, defaultSL: 103.80, defaultTP: 106.00 },
             { name: "EUR/AUD (Євро / Австралійський долар)", ticker: "EURAUD", contractSize: 100000, pipSize: 0.0001, defaultEntry: 1.6320, defaultSL: 1.6250, defaultTP: 1.6500 }
         ],
         stocks: [
@@ -972,15 +973,44 @@
         const slPercent = (priceDiff / entry) * 100;
         const pipsDistance = priceDiff / activeInstrument.pipSize;
 
-        // 4. Розрахунок лоту для MT4-MT5 (з урахуванням зворотної котировки USD/XXX)
+        // 4. Розрахунок лоту для MT4-MT5 з точною вартістю пункту (Pip Value)
         let lots = 0;
-        const isUsdBase = activeInstrument.ticker.startsWith("USD") && activeSector === 'forex';
-        
-        if (isUsdBase) {
-            // Для зворотних валютних пар (USD/XXX), де долар є базовим активом
-            lots = (riskAmount * entry) / (priceDiff * activeInstrument.contractSize);
+        let pipValuePerLot = 0; // Вартість 1 піпса для 1 стандартного лота в USD
+
+        if (activeSector === 'forex') {
+            const ticker = activeInstrument.ticker;
+            const pipSize = activeInstrument.pipSize;
+            const contractSize = activeInstrument.contractSize;
+
+            if (ticker.endsWith("USD")) {
+                // Прямі пари (EURUSD, GBPUSD, AUDUSD, NZDUSD): 1 pip = pipSize * contractSize = 10 USD
+                pipValuePerLot = pipSize * contractSize;
+            } else if (ticker.startsWith("USD")) {
+                // Зворотні пари (USDJPY, USDCAD, USDCHF): 1 pip = (pipSize * contractSize) / entry
+                pipValuePerLot = (pipSize * contractSize) / entry;
+            } else if (ticker === "GBPJPY") {
+                // Крос GBPJPY: базова GBP, котирувана JPY.
+                // 1 pip = pipSize * contractSize = 1000 JPY. Конвертація в USD: 1000 * (GBPUSD / GBPJPY) = 1000 * 1.265 / entry
+                pipValuePerLot = (pipSize * contractSize * 1.265) / entry;
+            } else if (ticker === "EURJPY") {
+                // Крос EURJPY: 1000 JPY в USD: 1000 * (EURUSD / EURJPY) = 1000 * 1.085 / entry
+                pipValuePerLot = (pipSize * contractSize * 1.085) / entry;
+            } else if (ticker === "AUDJPY") {
+                // Крос AUDJPY: 1000 JPY в USD: 1000 * (AUDUSD / AUDJPY) = 1000 * 0.665 / entry
+                pipValuePerLot = (pipSize * contractSize * 0.665) / entry;
+            } else if (ticker === "EURAUD") {
+                // Крос EURAUD: 1 pip = 10 AUD. Конвертація в USD: 10 * AUDUSD = 10 * 0.665
+                pipValuePerLot = pipSize * contractSize * 0.665;
+            } else {
+                pipValuePerLot = pipSize * contractSize;
+            }
+
+            // Лот = Ризик / (Відстань_у_піпсах * Вартість_піпса_на_1_лот)
+            if (pipsDistance > 0 && pipValuePerLot > 0) {
+                lots = riskAmount / (pipsDistance * pipValuePerLot);
+            }
         } else {
-            // Для прямих валютних пар (XXX/USD) та всіх інших інструментів
+            // Для інших секторів (Акції, Індекси, Крипто, Метали, Нафта, Інші):
             lots = riskAmount / (priceDiff * activeInstrument.contractSize);
         }
         
@@ -993,39 +1023,18 @@
         // 5. Обчислення Суми потенційного Прибутку (Take Profit)
         let profitAmount = 0;
         if (tp > 0) {
-            let tpPriceDiff = 0;
-            if (direction === "BUY") {
-                tpPriceDiff = tp - entry; 
-            } else {
-                tpPriceDiff = entry - tp; 
-            }
-            
-            // Розрахунок прибутку залежно від специфіки активу та валюти котирування
+            const tpPipsDistance = Math.abs(tp - entry) / activeInstrument.pipSize;
+
             if (activeSector === 'forex') {
-                const ticker = activeInstrument.ticker;
-                if (ticker === "USDJPY" || ticker === "USDCAD" || ticker === "USDCHF") {
-                    // Зворотні пари типу USD/XXX, де прибуток у XXX конвертується в USD через ділення на курс закриття (tp)
-                    profitAmount = (totalUnits * tpPriceDiff) / tp;
-                } else if (ticker === "GBPJPY") {
-                    // Крос-пари з єною. Наближена конвертація JPY в USD з використанням орієнтовного крос-курсу GBPUSD (1.265)
-                    const estUsdJpy = tp / 1.265;
-                    profitAmount = (totalUnits * tpPriceDiff) / estUsdJpy;
-                } else if (ticker === "EURJPY") {
-                    // Крос-пари з єною. Наближена конвертація JPY в USD з використанням орієнтовного крос-курсу EURUSD (1.085)
-                    const estUsdJpy = tp / 1.085;
-                    profitAmount = (totalUnits * tpPriceDiff) / estUsdJpy;
-                } else if (ticker === "EURAUD") {
-                    // Прибуток в AUD конвертується в USD через множення на орієнтовний курс AUDUSD (0.665)
-                    profitAmount = (totalUnits * tpPriceDiff) * 0.665;
-                } else {
-                    // Прямі пари типу XXX/USD (EURUSD, GBPUSD, AUDUSD, NZDUSD)
-                    profitAmount = totalUnits * tpPriceDiff;
-                }
+                // Прибуток = TP_дистанція_в_піпсах * Вартість_піпса_на_1_лот * Кількість_лотів
+                profitAmount = tpPipsDistance * pipValuePerLot * displayLots;
             } else if (activeSector === 'indices' && activeInstrument.ticker === "DE40") {
-                // Німецький індекс DAX 40 (DE40) котирується в EUR, конвертуємо в USD через орієнтовний курс EURUSD (1.085)
-                profitAmount = (totalUnits * tpPriceDiff) * 1.085;
+                // Німецький індекс DAX 40 (DE40) котирується в EUR, конвертуємо в USD через курс EURUSD (1.085)
+                const tpPriceDiff = Math.abs(tp - entry);
+                profitAmount = totalUnits * tpPriceDiff * 1.085;
             } else {
-                // Для всіх інших активів (акції, крипта, метали, сировина), де котирування йде безпосередньо в USD
+                // Для всіх інших активів котирування в USD
+                const tpPriceDiff = Math.abs(tp - entry);
                 profitAmount = totalUnits * tpPriceDiff;
             }
         }
